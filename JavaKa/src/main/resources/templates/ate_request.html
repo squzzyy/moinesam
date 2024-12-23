@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Request</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<h1>Create Request</h1>
+<form th:action="@{/api/requests}" th:object="${request}" method="post">
+    <input type="text" th:field="*{address}" placeholder="Address" required>
+    <input type="text" th:field="*{contactPhone}" placeholder="Contact Phone" required>
+    <select th:field="*{serviceType}" required>
+        <option value="general">General Cleaning</option>
+        <option value="deep">Deep Cleaning</option>
+        <option value="postConstruction">Post-Construction Cleaning</option>
+        <option value="carpet">Carpet Cleaning</option>
+        <option value="other">Other</option>
+    </select>
+    <input type="text" th:field="*{additionalInfo}" placeholder="Additional Info">
+    <input type="date" th:field="*{preferredDate}" required>
+    <input type="time" th:field="*{preferredTime}" required>
+    <select th:field="*{paymentMethod}" required>
+        <option value="cash">Cash</option>
+        <option value="card">Card</option>
+    </select>
+    <button type="submit">Create Request</button>
+</form>
+</body>
+</html>

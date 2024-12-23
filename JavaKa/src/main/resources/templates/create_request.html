@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Request</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h1>Create Request</h1>
+<form id="requestForm">
+    <input type="text" id="address" placeholder="Address" required>
+    <input type="text" id="contactPhone" placeholder="Contact Phone" required>
+    <select id="serviceType" required>
+        <option value="general">General Cleaning</option>
+        <option value="deep">Deep Cleaning</option>
+        <option value="postConstruction">Post-Construction Cleaning</option>
+        <option value="carpet">Carpet Cleaning</option>
+        <option value="other">Other</option>
+    </select>
+    <input type="text" id="additionalInfo" placeholder="Additional Info">
+    <input type="date" id="preferredDate" required>
+    <input type="time" id="preferredTime" required>
+    <select id="paymentMethod" required>
+        <option value="cash">Cash</option>
+        <option value="card">Card</option>
+    </select>
+    <input type="hidden" id="_csrf" th:value="${_csrf.token}"/>
+    <button type="submit">Create Request</button>
+</form>
+
+<h2>Request History</h2>
+<table id="requestHistoryTable" class="styled-table">
+    <thead>
+    <tr>
+        <th>Address</th>
+        <th>Contact Phone</th>
+        <th>Service Type</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Payment Method</th>
+    </tr>
+    </thead>
+    <tbody id="requestHistoryBody">
+    </tbody>
+</table>
+
+<script>
+    $(document).ready(function() {
+        function loadRequestHistory() {
+            $.ajax({
+                type: "GET",
+                url: "/api/requests",
+                contentType: "application/json",
+                success: function(data) {
+                    var requestHistoryBody = $("#requestHistoryBody");
+                    requestHistoryBody.empty(); // Clear the table before adding new data
+                    data.forEach(function(request) {
+                        var row = $("<tr>");
+                        row.append($("<td>").text(request.address));
+                        row.append($("<td>").text(request.contactPhone));
+                        row.append($("<td>").text(request.serviceType));
+                        row.append($("<td>").text(request.preferredDate));
+                        row.append($("<td>").text(request.preferredTime));
+                        row.append($("<td>").text(request.paymentMethod));
+                        requestHistoryBody.append(row);
+                    });
+                },
+                error: function(error) {
+                    alert("Error loading request history: " + error.responseText);
+                }
+            });
+        }
+
+        loadRequestHistory();
+
+        $("#requestForm").submit(function(event) {
+            event.preventDefault(); // Prevent default form submission
+            var csrfToken = $("#_csrf").val(); // Get CSRF token
+
+            var currentUserId = 1; // Example value, replace with actual
+
+            var requestData = {
+                address: $("#address").val(),
+                contactPhone: $("#contactPhone").val(),
+                serviceType: $("#serviceType").val(),
+                additionalInfo: $("#additionalInfo").val(),
+                preferredDate: $("#preferredDate").val(),
+                preferredTime: $("#preferredTime").val(),
+                paymentMethod: $("#paymentMethod").val(),
+                status: "pending",
+                user: { id: currentUserId }
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "/api/requests",
+                contentType: "application/json",
+                data: JSON.stringify(requestData),
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("X-CSRF-TOKEN", csrfToken);
+                },
+                success: function(response) {
+                    alert("Request successfully created!");
+                    loadRequestHistory();
+                },
+                error: function(error) {
+                    alert("Error creating request: " + error.responseText);
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

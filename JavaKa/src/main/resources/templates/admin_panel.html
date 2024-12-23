@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Admin Panel</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h1 class="animated fadeIn">Admin Panel</h1>
+<div class="table-container">
+    <table class="styled-table">
+        <thead>
+        <tr>
+            <th>Full Name</th>
+            <th>Contact Phone</th>
+            <th>Service Type</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="requestsTableBody">
+        <!-- Requests will be loaded here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function(){
+        function loadRequests(){
+            $.ajax({
+                type: "GET",
+                url: "/api/requests",
+                contentType: "application/json",
+                success: function(data){
+                    var requestsTableBody = $("#requestsTableBody");
+                    requestsTableBody.empty(); // Clear the table before adding new data
+                    data.forEach(function(request){
+                        var row = $("<tr>");
+                        row.append($("<td data-label='Full Name'>").text(request.user.fullName));
+                        row.append($("<td data-label='Contact Phone'>").text(request.contactPhone));
+                        row.append($("<td data-label='Service Type'>").text(request.serviceType));
+                        row.append($("<td data-label='Date'>").text(request.preferredDate));
+                        row.append($("<td data-label='Time'>").text(request.preferredTime));
+                        row.append($("<td data-label='Status'>").text(request.status));
+
+                        var actions = $("<td data-label='Actions'>");
+                        var statusSelect = $("<select>").append(
+                            $("<option>").val("inProgress").text("In Progress"),
+                            $("<option>").val("completed").text("Completed"),
+                            $("<option>").val("cancelled").text("Cancelled")
+                        ).val(request.status);
+
+                        var saveButton = $("<button class='btn-save'>").text("Save").click(function(){
+                            var newStatus = statusSelect.val();
+                            var rejectionReason = newStatus === "cancelled" ? prompt("Enter rejection reason:") : null;
+                            updateRequestStatus(request.id, newStatus, rejectionReason);
+                        });
+
+                        actions.append(statusSelect).append(saveButton);
+                        row.append(actions);
+
+                        requestsTableBody.append(row);
+                    });
+                },
+                error: function(error){
+                    alert("Error loading requests: " + error.responseText);
+                }
+            });
+        }
+
+        function updateRequestStatus(requestId, newStatus, rejectionReason){
+            $.ajax({
+                type: "PUT",
+                url: "/api/requests/" + requestId,
+                contentType: "application/json",
+                data: JSON.stringify({status: newStatus, rejectionReason: rejectionReason}),
+                success: function(){
+                    loadRequests();
+                },
+                error: function(error){
+                    alert("Error updating status: " + error.responseText);
+                }
+            });
+        }
+
+        loadRequests();
+    });
+</script>
+</body>
+</html>
